@@ -48,7 +48,7 @@ func Potrf(a blas64.Symmetric) (t blas64.Triangular, ok bool) {
 	return
 }
 
-// Dgels finds a minimum-norm solution based on the matrices a and b using the
+// Gels finds a minimum-norm solution based on the matrices a and b using the
 // QR or LQ factorization. Dgels returns false if the matrix
 // A is singular, and true if this solution was successfully found.
 //
