@@ -17,6 +17,7 @@ type Implementation struct{}
 
 var _ lapack.Float64 = Implementation{}
 
+// This list is also used in lapack/cgo. Keep in sync.
 const (
 	badDirect     = "lapack: bad direct"
 	badLdA        = "lapack: index of a out of range"
