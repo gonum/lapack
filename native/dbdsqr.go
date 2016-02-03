@@ -122,6 +122,9 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 			smax = math.Max(smax, math.Abs(e[i]))
 		}
 
+		// Maximum number of iterations in the main loop before exit.
+		maxIt := maxIter * n * n
+
 		var sminl float64
 		var thresh float64
 		if tol >= 0 {
@@ -137,12 +140,11 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 				}
 			}
 			sminoa = sminoa / math.Sqrt(float64(n))
-			thresh = math.Max(tol*sminoa, float64(maxIter*n*n)*unfl)
+			thresh = math.Max(tol*sminoa, float64(maxIt)*unfl)
 		} else {
-			thresh = math.Max(math.Abs(tol)*smax, float64(maxIter*n*n)*unfl)
+			thresh = math.Max(math.Abs(tol)*smax, float64(maxIt)*unfl)
 		}
 		// Prepare for the main iteration loop for the singular values.
-		maxIt := maxIter * n * n
 		iter := 0
 		oldl2 := -1
 		oldm := -1
