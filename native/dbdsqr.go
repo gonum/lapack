@@ -153,15 +153,6 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 
 	Outer:
 		for m > 1 {
-			if iter > maxIt {
-				info = 0
-				for i := 0; i < n-1; i++ {
-					if e[i] != 0 {
-						info++
-					}
-				}
-				return info == 0
-			}
 			// Find diagonal block of matrix to work on.
 			if tol < 0 && math.Abs(d[m-1]) <= thresh {
 				d[m-1] = 0
@@ -437,6 +428,14 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 						impl.Dlasr(blas.Left, lapack.Variable, lapack.Backward, m-l2, ncc, work, work[n-1:], c[l2*ldc:], ldc)
 					}
 				}
+			}
+			if iter > maxIt {
+				for i := 0; i < n-1; i++ {
+					if e[i] != 0 {
+						return false
+					}
+				}
+				return true
 			}
 		}
 	}
