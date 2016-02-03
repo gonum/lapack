@@ -69,7 +69,7 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 	if len(work) < 4*n {
 		panic(badWork)
 	}
-	var info int
+
 	bi := blas64.Implementation()
 	const (
 		maxIter = 6
@@ -80,12 +80,10 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 	if n != 1 {
 		// If the singular vectors do not need to be computed, use qd algorithm.
 		if !(ncvt > 0 || nru > 0 || ncc > 0) {
-			info = impl.Dlasq1(n, d, e, work)
-			// If info is 2 dqds didn't finish, and so try to.
-			if info != 2 {
+			if info := impl.Dlasq1(n, d, e, work); info != 2 {
 				return info == 0
 			}
-			info = 0
+			// If info is 2 dqds didn't finish, and so try to.
 		}
 		nm1 := n - 1
 		nm12 := nm1 + nm1
@@ -475,11 +473,11 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 			}
 		}
 	}
-	info = 0
+
 	for i := 0; i < n-1; i++ {
 		if e[i] != 0 {
-			info++
+			return false
 		}
 	}
-	return info == 0
+	return true
 }
