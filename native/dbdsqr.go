@@ -88,7 +88,7 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 		nm1 := n - 1
 		nm12 := nm1 + nm1
 		nm13 := nm12 + nm1
-		idir := 0
+		var iterPos bool
 
 		eps := dlamchE
 		unfl := dlamchS
@@ -207,16 +207,12 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 			// If working on a new submatrix, choose shift direction from larger end
 			// diagonal element toward smaller.
 			if l2 > oldm-1 || m-1 < oldl2 {
-				if math.Abs(d[l2]) >= math.Abs(d[m-1]) {
-					idir = 1
-				} else {
-					idir = 2
-				}
+				iterPos = math.Abs(d[l2]) >= math.Abs(d[m-1])
 			}
 			// Apply convergence tests.
 			// TODO(btracey): There is a lot of similar looking code here. See
 			// if there is a better way to de-duplicate.
-			if idir == 1 {
+			if iterPos {
 				// Run convergence test in forward direction.
 				// First apply standard test to bottom of matrix.
 				if math.Abs(e[m-2]) <= math.Abs(tol)*math.Abs(d[m-1]) || (tol < 0 && math.Abs(e[m-2]) <= thresh) {
@@ -266,7 +262,7 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 				shift = 0
 			} else {
 				var sl2 float64
-				if idir == 1 {
+				if iterPos {
 					sl2 = math.Abs(d[l2])
 					shift, _ = impl.Dlas2(d[m-2], e[m-2], d[m-1])
 				} else {
@@ -283,10 +279,10 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 			iter += m - l2 + 1
 			// If no shift, do simplified QR iteration.
 			if shift == 0 {
-				if idir == 1 {
-					cs := 1.0
-					oldcs := 1.0
-					var sn, r, oldsn float64
+				cs := 1.0
+				oldcs := 1.0
+				var sn, r, oldsn float64
+				if iterPos {
 					for i := l2; i < m-1; i++ {
 						cs, sn, r = impl.Dlartg(d[i]*cs, e[i])
 						if i > l2 {
@@ -314,9 +310,6 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 						e[m-2] = 0
 					}
 				} else {
-					cs := 1.0
-					oldcs := 1.0
-					var sn, r, oldsn float64
 					for i := m - 1; i >= l2+1; i-- {
 						cs, sn, r = impl.Dlartg(d[i]*cs, e[i-1])
 						if i < m-1 {
@@ -346,7 +339,7 @@ func (impl Implementation) Dbdsqr(uplo blas.Uplo, n, ncvt, nru, ncc int, d, e, v
 				}
 			} else {
 				// Use nonzero shift.
-				if idir == 1 {
+				if iterPos {
 					// Chase bulge from top to bottom. Save cosines and sines for
 					// later singular vector updates.
 					f := (math.Abs(d[l2]) - shift) * (math.Copysign(1, d[l2]) + shift/d[l2])
