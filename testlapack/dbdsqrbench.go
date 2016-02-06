@@ -21,6 +21,7 @@ func DbdsqrBench(b *testing.B, impl DbdsqrerDgebrder, m, n, lda int, useVT bool)
 	// The benchmarking section of netlib, found at http://www.netlib.org/lapack/lug/node71.html
 	// indicates that benchmarks are typically done on random matricies that are
 	// transformed to produce desired properties (symmetry, diagonalization, etc.).
+	rand.Seed(0)
 
 	if lda == 0 {
 		lda = n
@@ -33,6 +34,9 @@ func DbdsqrBench(b *testing.B, impl DbdsqrerDgebrder, m, n, lda int, useVT bool)
 
 	minmn := min(m, n)
 	a := make([]float64, m*lda)
+	for i := range a {
+		a[i] = rand.NormFloat64()
+	}
 	d := make([]float64, minmn)
 	e := make([]float64, minmn-1)
 	tauP := make([]float64, minmn)
@@ -41,37 +45,44 @@ func DbdsqrBench(b *testing.B, impl DbdsqrerDgebrder, m, n, lda int, useVT bool)
 	work := make([]float64, 1)
 
 	impl.Dgebrd(m, n, a, lda, d, e, tauP, tauQ, work, -1)
+
 	work = make([]float64, int(work[0]))
 	lwork := len(work)
+
+	// Construct the bidiagonal matrix in d and e.
+	impl.Dgebrd(m, n, a, lda, d, e, tauQ, tauP, work, lwork)
+	dCopy := make([]float64, len(d))
+	copy(d, dCopy)
+	eCopy := make([]float64, len(e))
+	copy(e, dCopy)
+
+	var pt []float64
+	var ptCopy []float64
+
+	if useVT {
+		// Path might be used by dgesvd.
+		pt = make([]float64, n*n)
+		for i := 0; i < n; i++ {
+			pt[i*n+i] = 1
+		}
+		ptCopy = make([]float64, len(pt))
+		copy(pt, ptCopy)
+	}
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
+		copy(dCopy, d)
+		copy(eCopy, e)
 
-		// TODO(jonlawlor): When useVT is false, this initialization is a large
-		// portion of the benchmark time.  Because the number of iterations in a
-		// benchmark is inversely proportional to the time of a single iteration,
-		// this causes a large delay, because Dbdsqr is so fast, and the initialization
-		// time is ignored.  Maybe there is a way to amortize the cost of constructing
-		//  a random bidirectional matrix?
-		for i := range a {
-			a[i] = rand.NormFloat64()
-		}
-
-		impl.Dgebrd(m, n, a, lda, d, e, tauQ, tauP, work, lwork)
 		if useVT {
 			// Path might be used by dgesvd.
-			pt := make([]float64, n*n)
-			ldpt := n
-			for i := 0; i < n; i++ {
-				pt[i*ldpt+i] = 1
-			}
-
+			copy(ptCopy, pt)
 			b.StartTimer()
 			impl.Dbdsqr(uplo, minmn, minmn, 0, 0, d, e, pt, minmn, nil, 0, nil, 0, work)
 			continue
 		}
 		b.StartTimer()
 		impl.Dbdsqr(uplo, minmn, 0, 0, 0, d, e, nil, 0, nil, 0, nil, 0, work)
-
 	}
 }
