@@ -21,7 +21,7 @@ func DbdsqrBench(b *testing.B, impl DbdsqrerDgebrder, m, n, lda int, useVT bool)
 	// The benchmarking section of netlib, found at http://www.netlib.org/lapack/lug/node71.html
 	// indicates that benchmarks are typically done on random matricies that are
 	// transformed to produce desired properties (symmetry, diagonalization, etc.).
-	rand.Seed(0)
+	rand.Seed(1)
 
 	if lda == 0 {
 		lda = n
