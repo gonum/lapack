@@ -1,5 +1,5 @@
+#!/bin/bash
 set -ex
 
-# fetch gonum/blas and gonum/matrix
-go get github.com/gonum/blas
-go get github.com/gonum/matrix/mat64
+source ${TRAVIS_BUILD_DIR}/.travis/$TRAVIS_OS_NAME/install.sh
+cd native
