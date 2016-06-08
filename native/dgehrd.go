@@ -137,7 +137,7 @@ func (impl Implementation) Dgehrd(n, ilo, ihi int, a []float64, lda int, tau, wo
 		// Use blocked code.
 		bi := blas64.Implementation()
 		iwt := n * nb // Size of the matrix Y and index where the matrix T starts in work.
-		for i = ilo; i < ihi-nx; i += nb {
+		for i = ilo; i < ihi-nb; i += nb {
 			ib := min(nb, ihi-i)
 
 			// Reduce columns [i:i+ib] to Hessenberg form, returning the
