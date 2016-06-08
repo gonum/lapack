@@ -6,10 +6,13 @@ package native
 
 // Ilaenv returns algorithm tuning parameters for the algorithm given by the
 // input string. ispec specifies the parameter to return:
-//  1: The optimal block size for a blocked algorithm.
-//  2: The minimum block size for a blocked algorithm.
-//  3: The block size of unprocessed data at which a blocked algorithm should
-//     crossover to an unblocked version.
+//  1: The optimal block size. If this value is 1, an unblocked algorithm will
+//     give the best performance.
+//  2: The minimum block size for which the block routine should be used. If the
+//     usable block size is less than this value, an unblocked routine should be
+//     used.
+//  3: The crossover point between a blocked and unblocked algorithm. In a block
+//     routine, for N less than this value, an unblocked routine should be used.
 //  4: The number of shifts.
 //  5: The minimum column dimension for blocking to be used.
 //  6: The crossover point for SVD (to use QR factorization or not).
