@@ -33,6 +33,12 @@ adjust the `CGO_LDFLAGS` variable:
   CGO_LDFLAGS="-lmkl_rt" go install github.com/gonum/lapack/cgo
 ```
 
+On OS X, the libraries provided by the system (framework Accelerate) will not work. You need to install OpenBLAS:
+```sh
+  brew install homebrew/science/openblas
+  CGO_LDFLAGS="-L/usr/local/opt/openblas/lib -lopenblas" go install github.com/gonum/lapack/cgo
+```
+
 ## Packages
 
 ### lapack
